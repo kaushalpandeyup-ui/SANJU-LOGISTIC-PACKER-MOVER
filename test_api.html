@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>API Test - Sanju</title>
+  <style>body{font-family:system-ui,Segoe UI,Arial;padding:20px} label{display:block;margin-top:8px}</style>
+</head>
+<body>
+  <h1>API Quick Test</h1>
+  <p>Set BASE if needed (default: current origin or fallback to http://localhost:3000)</p>
+  <div>
+    <label>Base URL <input id="base" value="http://localhost:3000" style="width:360px"/></label>
+    <h2>Signup</h2>
+    <label>Email <input id="su_email" value="testuser@example.com"/></label>
+    <label>Phone <input id="su_phone" value="9999999999"/></label>
+    <label>Password <input id="su_pass" value="Test@1234"/></label>
+    <button id="doSignup">Signup</button>
+    <pre id="su_out"></pre>
+    <h2>Login</h2>
+    <label>Email <input id="li_email" value="testuser@example.com"/></label>
+    <label>Password <input id="li_pass" value="Test@1234"/></label>
+    <button id="doLogin">Login</button>
+    <pre id="li_out"></pre>
+  </div>
+  <script>
+    async function doPost(url, body){
+      try{
+        const res = await fetch(url, { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) });
+        const text = await res.text();
+        try{ return { status: res.status, body: JSON.parse(text) } }catch(e){ return { status: res.status, body: text } }
+      }catch(e){ return { error: e && e.message || String(e) } }
+    }
+    document.getElementById('doSignup').addEventListener('click', async ()=>{
+      const base = document.getElementById('base').value;
+      const email = document.getElementById('su_email').value;
+      const phone = document.getElementById('su_phone').value;
+      const pass = document.getElementById('su_pass').value;
+      const out = document.getElementById('su_out'); out.textContent = '...' ;
+      const r = await doPost(base + '/api/signup', { email, phone, password: pass });
+      out.textContent = JSON.stringify(r, null, 2);
+    });
+    document.getElementById('doLogin').addEventListener('click', async ()=>{
+      const base = document.getElementById('base').value;
+      const email = document.getElementById('li_email').value;
+      const pass = document.getElementById('li_pass').value;
+      const out = document.getElementById('li_out'); out.textContent = '...';
+      const r = await doPost(base + '/api/login', { email, password: pass });
+      out.textContent = JSON.stringify(r, null, 2);
+    });
+  </script>
+</body>
+</html>
