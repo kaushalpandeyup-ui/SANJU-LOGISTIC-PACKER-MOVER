@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Login / Signup - Sanju</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <script src="./scripts/localize-client.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="site-header">
+      <a class="brand" href="/index.locall.html"><span class="logo"></span>Sanju</a>
+      <nav class="nav muted"><a href="/login.html">Login</a><a href="/payment.html">Payment</a><a href="/admin.html">Admin</a></nav>
+    </div>
+
+  <h1>Login</h1>
+  <form id="login" class="card" onsubmit="return handleLoginSubmit(event)">
+      <label for="login-email">Email</label>
+      <input id="login-email" name="email" placeholder="email" required />
+      <label for="login-pass">Password</label>
+      <input id="login-pass" name="password" type="password" placeholder="password" required />
+  <button type="submit" class="primary" onclick="document.getElementById('loginResult').textContent='Button clicked — attempting login...'">Login</button>
+    </form>
+
+    <h2>Or Signup</h2>
+  <form id="signup" class="card" onsubmit="return handleSignupSubmit(event)">
+      <label for="signup-email">Email</label>
+      <input id="signup-email" name="email" placeholder="email" required />
+      <label for="signup-phone">Phone</label>
+      <input id="signup-phone" name="phone" placeholder="phone" />
+      <label for="signup-pass">Password</label>
+      <input id="signup-pass" name="password" type="password" placeholder="password" required />
+  <button type="submit" class="primary" onclick="document.getElementById('signupResult').textContent='Button clicked — attempting signup...'">Sign Up</button>
+    </form>
+
+  <!-- Results and client-side errors (moved outside forms so handlers can update reliably) -->
+  <div id="signupResult" class="muted mt-8" aria-live="polite"></div>
+  <div id="loginResult" class="muted mt-8" aria-live="polite"></div>
+  <div id="clientError" style="color:#f66;margin-top:12px;display:none;" role="status" aria-live="assertive"></div>
+  </div>
+
+  <script>
+    console.log('login.html script loaded');
+    // If the file is opened directly (file://), default to localhost server.
+    const BASE = (window.location.protocol === 'file:' || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+
+  // resilient fetch helper with retries and helpful errors
+    async function resilientFetch(input, init = {}, retries = 2, backoff = 300){
+      let lastErr;
+      for(let i=0;i<=retries;i++){
+        try{
+          const res = await fetch(input, init);
+          return res;
+        }catch(e){ lastErr = e; if(i < retries) await new Promise(r=>setTimeout(r, backoff*(i+1))); }
+      }
+      throw lastErr || new Error('network');
+    }
+
+    async function post(url, data){
+      const full = url.startsWith('http') ? url : (BASE + url);
+      let res;
+      try{
+        res = await resilientFetch(full, { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(data) });
+      }catch(e){ throw { error: 'network', message: 'Unable to contact server. Please check your connection or try again later.' }; }
+      let body = null;
+      try{ body = await res.json(); }catch(e){}
+      if(!res.ok) throw body || { status: res.status, statusText: res.statusText };
+      return body;
+    }
+
+    // attach handlers after DOM ready and surface client script errors
+    document.addEventListener('DOMContentLoaded', ()=>{
+      try{
+        const signupForm = document.getElementById('signup');
+        const loginForm = document.getElementById('login');
+        const signupOut = document.getElementById('signupResult');
+        const loginOut = document.getElementById('loginResult');
+        const clientErr = document.getElementById('clientError');
+
+        signupForm.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          signupOut.textContent = 'Working...';
+          try{
+            const fd = new FormData(e.target);
+            const data = { email: fd.get('email'), phone: fd.get('phone'), password: fd.get('password') };
+            const res = await post('/api/signup', data);
+            signupOut.textContent = 'Signup successful. You can now login.';
+          }catch(err){
+            let msg = 'Signup failed';
+            try{ if(err && typeof err === 'object'){ msg = err.error || err.message || JSON.stringify(err); } else msg = String(err); }catch(e){}
+            signupOut.textContent = 'Signup error: ' + msg + ' (check server is running at ' + BASE + ')';
+          }
+        });
+
+        loginForm.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          loginOut.textContent = 'Logging in...';
+          try{
+            const fd = new FormData(e.target);
+            const data = { email: fd.get('email'), password: fd.get('password') };
+            const res = await post('/api/login', data);
+            if(res && res.token){ localStorage.setItem('sanju_token', res.token); loginOut.textContent = 'Login successful. Redirecting...'; setTimeout(()=>{ window.location.href = BASE + '/index.locall.html'; }, 700); }
+            else loginOut.textContent = 'Login failed: '+JSON.stringify(res);
+          }catch(err){
+            let msg = 'Login failed';
+            try{ if(err && typeof err === 'object'){ msg = err.error || err.message || JSON.stringify(err); } else msg = String(err); }catch(e){}
+            loginOut.textContent = 'Login error: '+msg + ' (ensure server is running at ' + BASE + ')';
+          }
+        });
+
+      }catch(initErr){
+        const clientErr = document.getElementById('clientError');
+        if(clientErr){ clientErr.style.display = 'block'; clientErr.textContent = 'Client error initializing login handlers: ' + (initErr && (initErr.message || String(initErr))); }
+        else console.error('Client error initializing login handlers', initErr);
+      }
+    });
+
+    // Fallback global handlers in case DOMContentLoaded attachment fails
+    async function handleSignupSubmit(e){
+      try{
+        if(e && e.preventDefault) e.preventDefault();
+        const form = document.getElementById('signup');
+        const out = document.getElementById('signupResult');
+        out.textContent = 'Working...';
+        const fd = new FormData(form);
+        const data = { email: fd.get('email'), phone: fd.get('phone'), password: fd.get('password') };
+        const res = await post('/api/signup', data);
+        out.textContent = 'Signup successful. You can now login.';
+      }catch(err){
+        const out = document.getElementById('signupResult');
+        let msg = 'Signup failed';
+        try{ if(err && typeof err === 'object'){ msg = err.error || err.message || JSON.stringify(err); } else msg = String(err); }catch(e){}
+        out.textContent = 'Signup error: ' + msg + ' (check server at ' + BASE + ')';
+      }
+      return false;
+    }
+
+    async function handleLoginSubmit(e){
+      try{
+        if(e && e.preventDefault) e.preventDefault();
+        const form = document.getElementById('login');
+        const out = document.getElementById('loginResult');
+        out.textContent = 'Logging in...';
+        const fd = new FormData(form);
+        const data = { email: fd.get('email'), password: fd.get('password') };
+        const res = await post('/api/login', data);
+        if(res && res.token){ localStorage.setItem('sanju_token', res.token); out.textContent = 'Login successful. Redirecting...'; setTimeout(()=>{ window.location.href = BASE + '/index.locall.html'; }, 700); }
+        else out.textContent = 'Login failed: ' + JSON.stringify(res);
+      }catch(err){
+        const out = document.getElementById('loginResult');
+        let msg = 'Login failed';
+        try{ if(err && typeof err === 'object'){ msg = err.error || err.message || JSON.stringify(err); } else msg = String(err); }catch(e){}
+        out.textContent = 'Login error: ' + msg + ' (check server at ' + BASE + ')';
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>
