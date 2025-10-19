@@ -1,0 +1,46 @@
+/* Styles for local wrapper (index.locall.html) */
+/* Responsive wrapper to mimic a mobile device viewport while remaining fluid */
+html,body{height:100%;margin:0;padding:0;background:#f3f3f3;font-family:Arial,Helvetica,sans-serif}
+#frameWrap{width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:#eee;padding:0;margin:0}
+#mobileViewport{width:320px;max-width:100%;height:100vh;max-height:100vh;position:relative;overflow:hidden;background:#fff;border-radius:0;box-shadow:0 10px 30px rgba(0,0,0,0.08);display:flex;flex-direction:column}
+iframe#mobileFrame{width:100%;height:100vh;border:0;display:block;min-height:360px;flex:1 1 auto}
+
+/* Notice and menus */
+#notice{position:absolute;left:12px;top:12px;z-index:9999;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:6px;font-size:13px}
+#threeMenu{position:absolute;left:8px;top:8px;z-index:10020}
+#threeBtn{width:36px;height:36px;border-radius:18px;border:0;background:transparent;color:#222;font-size:20px;line-height:1;cursor:pointer}
+#threeDropdown{display:none;position:absolute;left:0;top:44px;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(0,0,0,0.12);border-radius:8px;overflow:hidden;min-width:160px}
+#threeDropdown a{display:block;padding:10px 12px;color:#111;text-decoration:none;font-size:14px}
+
+/* Action buttons */
+.local-action-btn{position:absolute;bottom:110px;right:12px;z-index:10010;background:rgba(255,77,77,0.98);color:#fff;border:2px solid #fff;border-radius:28px;padding:10px 16px;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,0.12);cursor:pointer}
+.local-action-btn.book{right:92px;background:rgba(30,136,229,0.98);border:2px solid #fff}
+.local-action-btn:active{transform:translateY(1px)}
+
+@media (max-width:420px){
+  #mobileViewport{width:100%;height:100vh;border-radius:0}
+  .local-action-btn{right:8px;padding:8px 12px}
+}
+@media (max-height:600px){
+  .local-action-btn{bottom:220px}
+}
+
+/* Slides and images: force high-quality rendering and remove blur placeholders */
+.sanju-ai-ads-integrated .slides img,
+.sanju-ai-ads-integrated img,
+img{max-width:100% !important;height:auto !important;object-fit:contain !important;filter:none !important;-webkit-filter:none !important}
+
+/* Ensure any lazy classes do not hide images */
+.lazy, .lazyload, .ls-lazy, .lqip, .blur-up { opacity:1 !important; filter:none !important }
+
+/* Force iframe content to be visible when same-origin injection occurs */
+iframe#mobileFrame{background:transparent}
+
+/* Utility: make images that failed to load show a subtle placeholder rather than broken icon */
+img[src$=".jpg"], img[src$=".png"], img[src$=".jpeg"], img[src$=".webp"]{background-color:#f8f8f8}
+
+/* Preload helper class to visually hide preload link outputs (no-op) */
+.preload-image{display:none}
+
+/* Force removal of inline blur filters where present */
+*[style*="filter: blur"], *[style*="filter:blur"]{filter:none !important}
