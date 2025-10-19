@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Complete Booking Payment</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <script src="./scripts/localize-client.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="site-header">
+      <a class="brand" href="/INDEX.local.html"><span class="logo"></span>Sanju</a>
+      <nav class="nav muted"><a href="/login.html">Login</a><a href="/payment.html">Payment</a><a href="/admin.html">Admin</a></nav>
+    </div>
+
+    <h1>Sanju Logistics - Complete Payment</h1>
+    <div class="card payment-layout">
+      <img class="qr-img" src="https://static.wixstatic.com/media/df10e4_0e3785bd1f7c4bbcbee4268bf8c6ebe9~mv2.jpg/v1/fill/w_866,h_1204,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/8c449e9f-c235-4436-9ea5-8752510b3ae0.jpg" alt="Sanju QR" />
+      <div class="payment-body">
+        <h3>Upload payment screenshot and enter amount</h3>
+        <form id="pay" enctype="multipart/form-data" class="">
+          <label for="bookingId">Booking ID</label>
+          <input type="text" id="bookingId" name="bookingId" placeholder="booking id" required />
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" name="amount" placeholder="amount" required />
+          <label for="screenshot">Screenshot</label>
+          <input type="file" id="screenshot" name="screenshot" accept="image/*" />
+          <button type="submit" class="primary">Submit Payment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    const BASE = (window.location.protocol === 'file:' || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+    // Fill booking id from ?booking= query param if present
+    (function(){
+      try{ const params = new URLSearchParams(location.search); const b = params.get('booking'); if(b) document.getElementById('bookingId').value = b; }catch(e){}
+    })();
+
+    document.getElementById('pay').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const token = localStorage.getItem('sanju_token');
+      if(!token){ alert('login required'); return; }
+      const id = fd.get('bookingId');
+      try{
+        const res = await fetch(BASE + '/api/bookings/'+encodeURIComponent(id)+'/payment', { method: 'POST', body: fd, headers: { Authorization: 'Bearer '+token } });
+        const j = await res.json();
+        if(!res.ok) throw j || { status: res.status };
+        alert('payment saved: '+JSON.stringify(j));
+      }catch(err){ alert('payment error: '+(typeof err === 'string' ? err : JSON.stringify(err))); }
+    });
+  </script>
+</body>
+</html>
