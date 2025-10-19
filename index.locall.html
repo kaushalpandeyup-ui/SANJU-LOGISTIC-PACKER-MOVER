@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=320, user-scalable=yes" />
+  <title>Sanju Logistics - Mobile (Local Wrapper)</title>
+  <meta name="format-detection" content="telephone=no">
+  <link rel="stylesheet" href="./assets/local-wrapper.css">
+  <!-- Preload common hero images from local resource folder to avoid blurry placeholders -->
+  <link rel="preload" as="image" href="./resource/static.wixstatic.com/media/df10e4_3f740f5051a84a3c810369460147ee85mv2.jpg/v1/fill/w_1198,h_1198,q_90,enc_avif,quality_auto/df10e4_3f740f5051a84a3c810369460147ee85mv2.jpg">
+  <link rel="preload" as="image" href="./resource/static.wixstatic.com/media/df10e4_0f8eda30497f4f0197660a14cbc66c3bmv2.jpg/v1/fill/w_1268,h_1268,q_90,enc_avif,quality_auto/df10e4_0f8eda30497f4f0197660a14cbc66c3bmv2.jpg">
+  <link rel="preload" as="image" href="./resource/static.wixstatic.com/media/df10e4_596b91f4c4c542e9a374803311db27eemv2.jpg/v1/fill/w_1268,h_1268,q_90,enc_avif,quality_auto/df10e4_596b91f4c4c542e9a374803311db27eemv2.jpg">
+  <link rel="preload" as="image" href="./resource/static.wixstatic.com/media/df10e4_86af858f8581461db62ac6e1c090cb98mv2.jpg/v1/fill/w_1198,h_1198,q_90,enc_avif,quality_auto/df10e4_86af858f8581461db62ac6e1c090cb98mv2.jpg">
+  <style>
+  /* Page + frame wrapper */
+  html,body{height:100%;margin:0;padding:0;background:#f3f3f3}
+  /* allow the wrapper to grow so host fallback ads sit below the iframe and scroll away */
+  /* remove bottom host padding so mobile card can reach the page bottom */
+  /* ensure the frameWrap fills viewport so mobile card can sit flush to bottom */
+  /* make the mobile card fill the viewport vertically so top and bottom touch (9:16 disabled) */
+  #frameWrap{width:100%;height:100vh;display:flex;align-items:stretch;justify-content:center;position:relative;background:#eee;padding:0;margin:0}
+
+    /* Constrained mobile viewport - everything that should stay inside mobile goes here */
+  /* mobile viewport now flows with document height so host fallback content can appear below and scroll */
+  /* mobileViewport is a flex column so the iframe can grow and the bottom bar will stick to bottom */
+  /* full height mobile viewport: fill vertical space so top and bottom match the browser edges */
+  #mobileViewport{width:320px;max-width:100%;height:100vh;max-height:100vh;position:relative;overflow:hidden;background:#fff;border-radius:0;box-shadow:0 10px 30px rgba(0,0,0,0.08);display:flex;flex-direction:column}
+  /* make the bottom edge visually flush by removing inner rounding at the bottom */
+  #mobileViewport::after{content:'';display:block;height:0;width:100%;border-bottom-left-radius:8px;border-bottom-right-radius:8px}
+
+  iframe#mobileFrame{width:100%;height:100vh;border:0;display:block;min-height:360px;flex:1 1 auto}
+
+    /* small overlay for notices */
+    #notice{position:absolute;left:12px;top:12px;z-index:9999;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;font-size:13px}
+
+    /* Mobile action buttons - positioned inside the mobileViewport so they can't escape */
+  /* Action buttons: placed above phone/whatsapp area with white border */
+  /* Position buttons absolutely relative to mobileViewport. bottom value adjusted if viewport height changes */
+  .local-action-btn{position:absolute;bottom:110px;right:12px;z-index:10010;background:rgba(255,77,77,0.98);color:#fff;border:2px solid #fff;border-radius:28px;padding:10px 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,0.12);cursor:pointer}
+  .local-action-btn.book{right:92px;background:rgba(30,136,229,0.98);border:2px solid #fff}
+    .local-action-btn:active{transform:translateY(1px)}
+
+    /* Inline ad styling is handled inside mobileview.html; legacy wrapper popup styles removed. */
+    /* For very short viewports (small devices), raise buttons further to avoid overlapping header area */
+    @media (max-height:600px){
+      .local-action-btn{bottom:220px}
+    }
+  /* Host fallback ads removed - inline ad now lives inside mobileview.html */
+  </style>
+</head>
+<body>
+<div id="frameWrap">
+  <div id="notice">Mobile wrapper — local links patched</div>
+  <!-- three-dot menu (top-left) -->
+  <div id="threeMenu" style="position:absolute;left:8px;top:8px;z-index:10020;">
+    <button id="threeBtn" aria-label="menu" title="menu" style="width:36px;height:36px;border-radius:18px;border:0;background:transparent;color:#222;font-size:20px;line-height:1;cursor:pointer">⋯</button>
+    <div id="threeDropdown" style="display:none;position:absolute;left:0;top:44px;background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(0,0,0,0.12);border-radius:8px;overflow:hidden;min-width:160px">
+      <a id="logoutLink" href="#" style="display:block;padding:10px 12px;color:#111;text-decoration:none;font-size:14px">Logout</a>
+    </div>
+  </div>
+  <div id="mobileViewport">
+  <iframe id="mobileFrame" src="./mobileview.html" title="Mobile view"></iframe>
+
+    <!-- host-fallback removed - ads are now integrated inside mobileview.html -->
+
+    <!-- Floating action buttons: Pay Now / Book Now (inside mobileViewport) -->
+    <button id="bookNowBtn" class="local-action-btn book">Book Now</button>
+    <button id="payNowBtn" class="local-action-btn">Pay Now</button>
+  </div>
+</div>
+
+<script>
+  // Build slides HTML given a container element and a list of image paths
+  function buildSlides(container, dotsContainer, imagePaths){
+    if(!container) return null;
+    // set up a 16:9 container so images show fully
+    container.innerHTML = '';
+    container.style.cssText = 'position:relative;width:100%;padding-top:56.25%;overflow:hidden;';
+    dotsContainer && (dotsContainer.innerHTML = '');
+    const slides = [];
+    imagePaths.forEach((p,i)=>{
+      const s = document.createElement('div');
+      s.dataset.idx = i; s.className = i===0 ? 'active' : '';
+      s.style.cssText = 'position:absolute;left:0;top:0;right:0;bottom:0;opacity:0;transition:opacity .5s ease;display:flex;align-items:center;justify-content:center;overflow:hidden';
+  const img = document.createElement('img'); img.src = p; img.loading='eager'; img.decoding='auto'; img.alt = 'Sanju Logistics Image '+(i+1); img.style.width='100%'; img.style.height='100%'; img.style.objectFit='contain'; img.style.background='#000';
+      s.appendChild(img); container.appendChild(s); slides.push(s);
+      if(dotsContainer){ const d = document.createElement('div'); d.dataset.idx=i; d.addEventListener('click', ()=> goTo(i)); dotsContainer.appendChild(d); }
+    });
+    let idx = 0, t = null;
+    function setActive(i){ slides.forEach((sl,si)=> sl.classList.toggle('active', si===i)); if(dotsContainer) Array.from(dotsContainer.children).forEach((dn,di)=> dn.classList.toggle('active', di===i)); }
+    function next(){ idx = (idx+1) % (slides.length||1); setActive(idx); }
+    function goTo(i){ idx = i; setActive(idx); reset(); }
+    function reset(){ if(t) clearInterval(t); t = setInterval(next, 3000); }
+    setActive(0); reset();
+    return {setActive,goTo,reset,stop:()=>{ if(t) clearInterval(t);} };
+  }
+
+  (function(){
+    try{
+      const localBase = './uploads/ads/';
+  const localNames = ['1.jpg','2.jpg','3.jpg','4.jpg','5.jpg','6.jpg','7.jpg','8.jpg','9.jpg','10.jpg','11.jpg','12.jpg','13.jpg','14.jpg','15.jpg','16.jpg','17.jpg','18.jpg','19.jpg','20.jpg'];
+      const localPaths = localNames.map(n=> localBase + n);
+      const vendorPaths = [
+        './vendor/static.wixstatic.com/media__df10e4_3f740f5051a84a3c810369460147ee85~mv2.jpg',
+        './vendor/static.wixstatic.com/media__df10e4_5174c855a6e8457db77764ffed78bd08~mv2.jpg',
+        './vendor/static.wixstatic.com/media__df10e4_8bd4f4cd7319469887bde0ebfe4a47a3~mv2.jpg'
+      ];
+      const imagePaths = localPaths.concat(vendorPaths);
+
+  const iframe = document.getElementById('mobileFrame');
+
+      // helper to insert ads into iframe document under a target element
+      function injectIntoIframe(doc){
+        try{
+          // find target: prefer header photo id then welcome title then H1
+          let target = doc.querySelector('#img_comp-l8ehi3s5') || doc.querySelector('#welcomeTitle') || doc.querySelector('h1') || null;
+          if(!target){
+            // fallback: search common header/hero selectors
+            const welcomeSelectors = ['.hero','.site-header','.header','.top-banner'];
+            for(const sel of welcomeSelectors){ const el = doc.querySelector(sel); if(el){ target = el; break; } }
+          }
+          if(!target) return false;
+
+          // try to find a reasonable container around the target (so we insert after the full photo block)
+          let insertionTarget = target;
+          for(let i=0;i<6 && insertionTarget && insertionTarget.parentNode; i++){
+            const id = insertionTarget.id || '';
+            const cls = insertionTarget.className || '';
+            // stop at section-like containers or Wix comp blocks
+            if(/(^|\s)comp-/.test(cls) || /^comp-/.test(id) || insertionTarget.tagName.toLowerCase()==='section' || insertionTarget.tagName.toLowerCase()==='header' ){
+              break;
+            }
+            insertionTarget = insertionTarget.parentNode;
+          }
+
+          const wrapper = doc.createElement('div');
+          wrapper.className = 'sanju-ai-ads-integrated';
+          // inline styles to ensure wrapper participates in normal flow and does not float
+          wrapper.style.cssText = 'display:block;width:100%;box-sizing:border-box;padding:12px;margin-top:0;position:static;z-index:1';
+          wrapper.innerHTML = `
+            <div class="inner" style="display:block;width:100%;box-sizing:border-box;overflow:hidden;border-radius:0;">
+              <button class="close-btn" aria-label="Close ads" style="position:relative;right:0;top:0;">×</button>
+              <div class="slides"></div>
+              <div class="dots"></div>
+            </div>`;
+
+          // If the original target is an image element, replace it so the ad occupies the exact same space
+          if(target.tagName && target.tagName.toLowerCase()==='img'){
+            const imgWidth = target.getAttribute('width') || target.clientWidth || '100%';
+            const imgHeight = target.getAttribute('height') || target.clientHeight || 'auto';
+            wrapper.style.marginTop = '0';
+            // give the wrapper the same dimensions
+            wrapper.style.width = '100%';
+            const container = target.parentNode;
+            if(container){
+              container.replaceChild(wrapper, target);
+            } else {
+              target.replaceWith(wrapper);
+            }
+          } else {
+            const parent = insertionTarget.parentNode || insertionTarget.parentElement;
+            if(parent){
+              if(insertionTarget.nextSibling) parent.insertBefore(wrapper, insertionTarget.nextSibling);
+              else parent.appendChild(wrapper);
+            } else {
+              // last resort, append to body
+              doc.body.appendChild(wrapper);
+            }
+          }
+
+          // build slides inside iframe
+          const slidesEl = wrapper.querySelector('.slides');
+          const dotsEl = wrapper.querySelector('.dots');
+          buildSlides(slidesEl, dotsEl, imagePaths);
+          const closeBtn = wrapper.querySelector('.close-btn');
+          closeBtn && closeBtn.addEventListener('click', ()=> wrapper.style.display='none');
+          return true;
+        }catch(e){ return false; }
+      }
+
+      // If iframe is same-origin, inject into it so ads are part of the page and scroll away
+      function tryInject(){
+        try{
+          const win = iframe.contentWindow;
+          const doc = win.document;
+          const ok = injectIntoIframe(doc);
+          if(ok) return true;
+        }catch(e){ /* cross-origin */ }
+        return false;
+      }
+
+      // If injection fails (cross-origin), we do not render a host fallback here; ads are integrated inside the iframe source.
+
+      // Bind to iframe load to try injection; if it doesn't succeed after retries, show host fallback
+      iframe.addEventListener('load', ()=>{ tryInject(); });
+
+      // If iframe already loaded (cached), attempt immediately
+      if(iframe.contentWindow && iframe.contentDocument && iframe.contentDocument.readyState === 'complete'){
+        tryInject();
+      }
+
+    }catch(e){ console && console.warn && console.warn('sanju-ai-ads init failed', e); }
+  })();
+</script>
+
+<script>
+  // Auto-resize iframe height to its content (same-origin only)
+  (function(){
+    const iframe = document.getElementById('mobileFrame');
+    function resize(){
+      try{
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if(!doc) return;
+        const body = doc.body;
+        const h = Math.max(body.scrollHeight, body.offsetHeight, doc.documentElement.scrollHeight, doc.documentElement.offsetHeight);
+        // For option A (fill viewport) set iframe and container to window inner height
+        const viewportHeight = window.innerHeight;
+        iframe.style.height = viewportHeight + 'px';
+        const mobileViewport = document.getElementById('mobileViewport');
+        if(mobileViewport){
+          mobileViewport.style.height = viewportHeight + 'px';
+          mobileViewport.style.minHeight = viewportHeight + 'px';
+        }
+      }catch(e){ /* cross-origin or not ready */ }
+    }
+  iframe.addEventListener('load', ()=>{ resize(); setTimeout(resize,500); });
+  // on window resize enforce full viewport card
+  window.addEventListener('resize', ()=>{ resize(); });
+  })();
+</script>
+
+<script>
+  // Buttons navigate top-level to local files so functionality works outside the iframe
+  function goTop(url){
+    try{
+      // prefer top-level navigation (works when wrapper is inside another frame)
+      if(window.top && window.top !== window) { window.top.location.href = url; return; }
+    }catch(e){}
+    // fallback to current window (use relative path so file:// works too)
+    window.location.href = url;
+  }
+  document.getElementById('payNowBtn').addEventListener('click', ()=>{ goTop('payment.html'); });
+  document.getElementById('bookNowBtn').addEventListener('click', ()=>{ goTop('booking.html'); });
+
+  // three-dot menu behavior: toggle dropdown and logout
+  (function(){
+    const threeBtn = document.getElementById('threeBtn');
+    const dropdown = document.getElementById('threeDropdown');
+    const logoutLink = document.getElementById('logoutLink');
+    if(!threeBtn || !dropdown) return;
+    threeBtn.addEventListener('click', (e)=>{ e.stopPropagation(); dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block'; });
+    document.addEventListener('click', ()=>{ dropdown.style.display = 'none'; });
+    logoutLink && logoutLink.addEventListener('click', async (ev)=>{
+      ev.preventDefault();
+      try{
+        const token = localStorage.getItem('sanju_token');
+        if(token){
+          // attempt server-side revoke
+          try{ await fetch('/api/logout', { method:'POST', headers:{ 'authorization': 'Bearer '+token } }); }catch(e){}
+        }
+      }catch(e){}
+      // clear client state and redirect to login
+      try{ localStorage.removeItem('sanju_token'); }catch(e){}
+      window.location.href = '/login.html';
+    });
+  })();
+</script>
+
+<!-- legacy ad-inject block removed (replaced by consolidated injection/render fallback script above) -->
+
+<!-- Script to patch links inside the iframe (payment/booking/login/admin) to local files -->
+<script>
+(function(){
+  const iframe = document.getElementById('mobileFrame');
+  const localMap = {
+    '/online-payment':'/payment.html',
+    '/online-booking':'/booking.html',
+    '/login':'/login.html',
+    '/admin':'/admin.html'
+  };
+  function patchLinks(win){
+    try{
+      const doc = win.document;
+      const anchors = doc.querySelectorAll('a[href]');
+      anchors.forEach(a=>{
+        try{
+          const href = a.getAttribute('href');
+          if(!href) return;
+          // normalize
+          const pathname = (new URL(href, location.href)).pathname;
+          if(localMap[pathname]){
+            a.setAttribute('href', localMap[pathname]);
+            a.setAttribute('target','_self');
+          }
+          // also patch absolute links to the site domain to local files
+          if(href.includes('sanjulogisticspacker.com')){
+            if(href.includes('/online-payment')) a.setAttribute('href','/payment.html');
+            if(href.includes('/online-booking')) a.setAttribute('href','/booking.html');
+            if(href.includes('/login')) a.setAttribute('href','/login.html');
+            if(href.includes('/admin')) a.setAttribute('href','/admin.html');
+          }
+        }catch(e){}
+      });
+    }catch(e){console.warn('patchLinks failed',e)}
+  }
+
+  function addMobileViewOverrides(win){
+    try{
+      const doc = win.document;
+      // mark device as mobile-optimized and set site width so Wix mobile CSS applies
+      doc.documentElement.classList.add('device-mobile-optimized');
+      doc.body.classList.add('device-mobile-optimized');
+      // set a small site width to mimic mobile site root
+      doc.documentElement.style.setProperty('--site-width', '320px');
+      const siteContainer = doc.getElementById('SITE_CONTAINER') || doc.getElementById('site-root') || doc.getElementById('SITE_ROOT');
+      if(siteContainer){
+        siteContainer.style.width = '320px';
+        siteContainer.style.maxWidth = '100%';
+        siteContainer.style.margin = '0 auto';
+      }
+    }catch(e){/* ignore if cross-origin or elements missing */}
+  }
+
+  // Attempt to patch after iframe loads. If cross-origin prevents access, we fall back to a notice.
+  iframe.addEventListener('load', ()=>{
+    try{
+      const win = iframe.contentWindow;
+      patchLinks(win);
+      addMobileViewOverrides(win);
+      // Localize assets: rewrite remote asset URLs to local copies under ./resource/ when available
+      try{
+        const hostsToLocalize = ['static.wixstatic.com','static.parastorage.com','video.wixstatic.com','www.googletagmanager.com','maps.googleapis.com'];
+
+        function mapToLocal(url){
+          try{
+            if(!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+            const u = new URL(url, location.href);
+            const host = u.hostname;
+            const match = hostsToLocalize.find(h => host.endsWith(h));
+            if(!match) return url;
+            // prefer trup folder copies (absolute path from site root)
+            const file = (decodeURIComponent(u.pathname || '').split('/').pop() || '').replace(/^\/+/, '');
+            if(file) return '/trup/' + file;
+            return url;
+          }catch(e){ return url; }
+        }
+
+        // replace src/srcset-like attributes with local equivalents when available
+        function replaceSrcsetAttribute(el, attrName){
+          try{
+            const cur = el.getAttribute(attrName) || '';
+            if(!cur) return;
+            // split srcset entries: "url 1x, url2 2x" or "url 300w, url2 600w"
+            const parts = cur.split(',').map(p=>p.trim()).filter(Boolean);
+            const replaced = parts.map(p => {
+              const m = p.match(/^(\S+)(\s+.+)?$/);
+              if(!m) return p;
+              const urlPart = m[1]; const descriptor = (m[2]||'').trim();
+              const mapped = mapToLocal(urlPart) || urlPart;
+              return descriptor ? (mapped + ' ' + descriptor) : mapped;
+            }).join(', ');
+            if(replaced && replaced !== cur){
+              el.setAttribute(attrName, replaced);
+              try{ el.removeAttribute('loading'); el.removeAttribute('data-src'); el.removeAttribute('data-lazy'); if(el.style) el.style.filter = 'none'; }catch(e){}
+            }
+          }catch(e){}
+        }
+
+        function tryReplaceElementSrc(el, attr){
+          try{
+            const cur = el.getAttribute(attr) || el[attr] || '';
+            if(!cur) return;
+            const local = mapToLocal(cur);
+            if(local && local !== cur){
+              // test local existence by preloading
+              const t = new Image();
+              t.onload = ()=>{
+                try{
+                  el.setAttribute(attr, local);
+                  if(el.style) el.style.filter = 'none';
+                  el.removeAttribute('loading'); el.removeAttribute('data-src'); el.removeAttribute('data-lazy');
+                  // remove lazy/placeholder classes often used by loaders
+                  try{ el.classList && ['lazy','lazyload','ls-lazy','lqip','blur-up'].forEach(c=> el.classList.remove(c)); }catch(e){}
+                }catch(e){}
+              };
+              t.onerror = ()=>{
+                // local copy missing; leave original
+              };
+              t.src = local;
+            } else {
+              // remove lazy/blur attributes/classes if present
+              try{ el.removeAttribute('loading'); el.removeAttribute('data-src'); el.removeAttribute('data-lazy'); if(el.style) el.style.filter = 'none'; try{ el.classList && ['lazy','lazyload','ls-lazy','lqip','blur-up'].forEach(c=> el.classList.remove(c)); }catch(e){} }catch(e){}
+            }
+          }catch(e){}
+        }
+
+        // Images (<img>) - handle src, data-src, srcset and data-srcset
+        const imgs = win.document.querySelectorAll('img');
+        imgs.forEach(img=>{
+          tryReplaceElementSrc(img, 'src');
+          tryReplaceElementSrc(img, 'data-src');
+          replaceSrcsetAttribute(img, 'srcset');
+          replaceSrcsetAttribute(img, 'data-srcset');
+        });
+
+        // <source> elements (video/audio/picture) - handle src and srcset variants
+        const sources = win.document.querySelectorAll('source');
+        sources.forEach(s => {
+          tryReplaceElementSrc(s, 'src');
+          tryReplaceElementSrc(s, 'data-src');
+          replaceSrcsetAttribute(s, 'srcset');
+          replaceSrcsetAttribute(s, 'data-srcset');
+        });
+
+        // video poster attributes
+        const videos = win.document.querySelectorAll('video[poster]');
+        videos.forEach(v => tryReplaceElementSrc(v, 'poster'));
+
+        // link icons, favicons
+        const links = win.document.querySelectorAll('link[href]');
+        links.forEach(l => {
+          try{
+            const href = l.getAttribute('href') || '';
+            const local = mapToLocal(href);
+            if(local !== href) l.setAttribute('href', local);
+          }catch(e){}
+        });
+
+        // meta images (og:image, twitter:image)
+        const metas = win.document.querySelectorAll('meta[property][content], meta[name][content]');
+        metas.forEach(m => {
+          try{
+            const content = m.getAttribute('content') || '';
+            const local = mapToLocal(content);
+            if(local !== content) m.setAttribute('content', local);
+          }catch(e){}
+        });
+
+        // inline styles (style attributes) with background-image
+        const els = win.document.querySelectorAll('[style]');
+        els.forEach(el => {
+          try{
+            const s = el.getAttribute('style') || '';
+            const replaced = s.replace(/url\(([^)]+)\)/g, (m, p)=>{
+              const unq = p.replace(/^['\"]|['\"]$/g, '').trim();
+              const mapped = mapToLocal(unq);
+              return mapped === unq ? `url(${p})` : `url(${mapped})`;
+            });
+            if(replaced !== s) el.setAttribute('style', replaced);
+          }catch(e){}
+        });
+
+        // <style> tags: replace occurrences inside textContent
+        const styleTags = win.document.querySelectorAll('style');
+        styleTags.forEach(st => {
+          try{
+            const t = st.textContent || '';
+            const replaced = t.replace(/https?:\/+[^\s\)'"]+/g, (url)=>{
+              try{ const mapped = mapToLocal(url); return mapped === url ? url : mapped; }catch(e){ return url; }
+            });
+            if(replaced !== t) st.textContent = replaced;
+          }catch(e){}
+        });
+
+        // Fallback: fill images that are empty or still pointing to remote vendor hosts
+        async function fillImagesFromUploads(winDoc){
+          try{
+            const resp = await fetch('/api/uploads/banner/list', { cache: 'no-store' });
+            if(!resp.ok) return;
+            const body = await resp.json();
+            const files = Array.isArray(body.files) ? body.files : (body.files || []);
+            if(!files || !files.length) return;
+            const maxFiles = files.slice(0,20);
+            const imgs = Array.from(winDoc.querySelectorAll('img'));
+            const targets = imgs.filter(img => {
+              try{ const s = img.getAttribute('src') || ''; return !s || s.trim() === '' || /static\.wix(static)?\.com|static\.parastorage\.com/.test(s); }catch(e){return false}
+            });
+            targets.forEach((img, idx) => {
+              try{
+                const file = maxFiles[idx % maxFiles.length]; if(!file) return; img.setAttribute('src', file);
+                img.removeAttribute('loading'); img.removeAttribute('data-src'); img.removeAttribute('data-lazy');
+                try{ img.classList && ['lazy','lazyload','ls-lazy','lqip','blur-up'].forEach(c=> img.classList.remove(c)); }catch(e){}
+                try{ if(img.style && /blur\(/.test(img.style.filter)) img.style.filter = 'none'; }catch(e){}
+              }catch(e){}
+            });
+
+            // Inject merged background CSS using up to 20 images
+            try{
+              const head = win.document.head || win.document.getElementsByTagName('head')[0];
+              const cssId = 'trup-merged-css';
+              if(!win.document.getElementById(cssId)){
+                const link = win.document.createElement('link'); link.id = cssId; link.rel = 'stylesheet'; link.href = '/assets/trup-merged.css';
+                head.appendChild(link);
+                if(maxFiles.length >= 1) win.document.body.classList.add('merged-uploads');
+              }
+            }catch(e){}
+
+          }catch(e){}
+        }
+
+        try{ setTimeout(()=> fillImagesFromUploads(win.document), 600); }catch(e){}
+
+        // Remove blur filters from elements that used low-res placeholders
+        try{ Array.from(win.document.querySelectorAll('*')).forEach(el=>{ if(el.style && el.style.filter && /blur\(/.test(el.style.filter)) el.style.filter = 'none'; }); }catch(e){}
+
+      }catch(e){ console.warn('localize assets failed', e); }
+      // also observe DOM changes to re-patch dynamically inserted links
+      // Use a debounced observer and avoid observing attribute changes to prevent feedback loops
+      let patchTimer = null;
+      let patching = false;
+      const observer = new MutationObserver((mutations)=>{
+        // debounce frequent mutations
+        if(patchTimer) clearTimeout(patchTimer);
+        patchTimer = setTimeout(()=>{
+          if(patching) return;
+          try{
+            patching = true;
+            patchLinks(win);
+            addMobileViewOverrides(win);
+          }catch(e){ /* ignore */ }
+          finally{ patching = false; }
+        }, 150);
+      });
+      observer.observe(win.document, {childList:true,subtree:true});
+      // disconnect observer when iframe navigates away or unloads
+      try{
+        win.addEventListener('beforeunload', ()=>{ try{ observer.disconnect(); }catch(e){} });
+      }catch(e){/* cross-origin */}
+      // safety: auto-disconnect after 30s to avoid runaway observers
+      setTimeout(()=>{ try{ observer.disconnect(); }catch(e){} }, 30000);
+      document.getElementById('notice').style.display='none';
+    }catch(e){
+      console.warn('Could not access iframe content (likely cross-origin). Links will open remote pages.');
+      document.getElementById('notice').textContent = 'Mobile wrapper loaded — iframe is cross-origin, local link patching unavailable.';
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
