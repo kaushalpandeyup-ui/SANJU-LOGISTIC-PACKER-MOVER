@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Book a Move - Sanju</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <script src="./scripts/localize-client.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="site-header">
+      <a class="brand" href="/INDEX.local.html"><span class="logo"></span>Sanju</a>
+      <nav class="nav muted"><a href="/login.html">Login</a><a href="/payment.html">Payment</a><a href="/admin.html">Admin</a></nav>
+    </div>
+
+    <h1>Book a Move</h1>
+    <form id="bookingForm" class="card">
+      <label for="from">Pick From</label>
+      <input id="from" name="pickFrom" placeholder="Pick up location" required />
+      <label for="to">Drop To</label>
+      <input id="to" name="dropTo" placeholder="Drop location" required />
+      <label for="phone">Phone</label>
+      <input id="phone" name="phone" placeholder="Mobile number" required />
+      <div style="display:flex;gap:8px;margin-top:12px;"><button type="submit" class="primary">Submit Booking</button><a href="/INDEX.local.html" class="secondary" style="padding:10px 14px;text-decoration:none;align-self:center;">Cancel</a></div>
+      <div id="bookingResult" class="muted mt-8"></div>
+    </form>
+  </div>
+
+  <script>
+    const BASE = (window.location.protocol === 'file:' || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+    const form = document.getElementById('bookingForm'); const result = document.getElementById('bookingResult');
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault(); result.textContent = 'Submitting...';
+      const fd = new FormData(form); const data = { pickFrom: fd.get('pickFrom'), dropTo: fd.get('dropTo'), phone: fd.get('phone') };
+      try{
+        const res = await fetch(BASE + '/api/public/bookings', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(data) });
+        const j = await res.json();
+        if(!res.ok){ result.style.color='var(--theme-red,#c00)'; result.textContent = 'Error: '+(j && j.error? j.error : res.status); return; }
+        result.style.color='green'; result.textContent = j.message || 'Booking received. We will get to you soon.';
+        // notify admin via BroadcastChannel
+        try{ const bc = new BroadcastChannel('sanju-admin'); bc.postMessage({ type:'new-booking', booking: j.booking }); bc.close(); }catch(e){}
+        form.reset();
+      }catch(err){ result.style.color='var(--theme-red,#c00)'; result.textContent = 'Request failed: '+err.message; }
+    });
+  </script>
+</body>
+</html>
