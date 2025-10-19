@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script src="./scripts/localize-client.js" defer></script>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sanju Logistics — Welcome</title>
+    <style>
+      :root{
+        --bg:#0f1724; /* dark navy */
+        --accent:#0ea5a4; /* teal */
+        --card:#0b1220;
+        --muted:rgba(255,255,255,0.75);
+      }
+      html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,var(--bg) 0%, #071025 100%);color:#fff}
+      .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px}
+      .card{width:100%;max-width:920px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:14px;box-shadow:0 12px 40px rgba(2,6,23,0.6);padding:40px;display:flex;gap:28px;align-items:center}
+      .brand{flex:0 0 140px;display:flex;align-items:center;justify-content:center}
+      .brand .logo{width:110px;height:110px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#0369a1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#042;box-shadow:0 6px 18px rgba(14,165,164,0.18);}
+      .content{flex:1}
+      h1{margin:0 0 8px;font-size:28px;line-height:1.05}
+      p.lead{margin:0;color:var(--muted);font-size:15px}
+      .actions{margin-top:22px;display:flex;gap:12px;align-items:center}
+      .btn{background:var(--accent);color:#052; border:0;padding:12px 18px;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(14,165,164,0.14);}
+      .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);box-shadow:none}
+      .small{font-size:13px;color:rgba(255,255,255,0.6)}
+
+      /* Modal */
+      .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;z-index:60}
+      .modal{background:#04111b;padding:20px;border-radius:12px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(2,6,23,0.6);color:#fff}
+      .modal h3{margin:0 0 8px;font-size:18px}
+      .modal p{margin:0 0 16px;color:var(--muted)}
+      .modal .row{display:flex;gap:8px;justify-content:flex-end}
+      .modal .btn{padding:10px 14px;border-radius:8px}
+
+      /* Responsive */
+      @media (max-width:720px){
+        .card{flex-direction:column;align-items:flex-start;padding:20px}
+        .brand{align-self:center}
+        .brand .logo{width:88px;height:88px}
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card" role="region" aria-labelledby="welcomeTitle">
+        <div class="brand" aria-hidden="true">
+          <div class="logo">Sanju</div>
+        </div>
+        <div class="content">
+          <h1 id="welcomeTitle">Welcome to Sanju Logistics Packers &amp; Movers</h1>
+          <p class="lead">Trusted local and long-distance moving services. Fast quotes, secure transport and friendly customer support.</p>
+
+          <div class="actions">
+            <button id="continueBtn" class="btn">Continue to site</button>
+            <button id="learnBtn" class="btn secondary">Learn more</button>
+          </div>
+
+          <div style="margin-top:18px" class="small">By continuing you agree to our <a href="#" style="color:var(--accent)">terms</a> and <a href="#" style="color:var(--accent)">privacy policy</a>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- modal -->
+    <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" role="document">
+        <h3>Continue to Sanju site?</h3>
+        <p>You're about to open the main site. Do you want to continue?</p>
+        <div class="row">
+          <button id="cancelModal" class="btn secondary">Cancel</button>
+          <button id="confirmModal" class="btn">Yes, continue</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // elements
+      const backdrop = document.getElementById('backdrop');
+      const continueBtn = document.getElementById('continueBtn');
+      const cancelModal = document.getElementById('cancelModal');
+      const confirmModal = document.getElementById('confirmModal');
+
+      function openModal(){ backdrop.style.display = 'flex'; backdrop.setAttribute('aria-hidden','false'); cancelModal.focus(); }
+      function closeModal(){ backdrop.style.display = 'none'; backdrop.setAttribute('aria-hidden','true'); continueBtn.focus(); }
+
+      continueBtn.addEventListener('click', ()=>{ openModal(); });
+      cancelModal.addEventListener('click', ()=>{ closeModal(); });
+      backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) closeModal(); });
+
+      // On confirm redirect to login page first (then login will redirect to index.locall.html)
+      confirmModal.addEventListener('click', ()=>{
+        try{ location.replace('login.html'); }catch(e){ window.location.href = 'login.html'; }
+      });
+
+      // Allow keyboard control
+      document.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape') closeModal();
+        if(e.key === 'Enter' && backdrop.style.display === 'flex') confirmModal.click();
+      });
+    </script>
+  </body>
+</html>
