@@ -1,0 +1,9 @@
+node_modules/
+uploads/
+data/
+.DS_Store
+.env
+.env.*
+*.log
+vendor/
+resource/_DataURI/
