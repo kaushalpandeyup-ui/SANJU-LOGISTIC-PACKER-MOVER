@@ -1,0 +1,26 @@
+node_modules/
+uploads/
+data/
+.DS_Store
+.env
+.env.*
+*.log
+vendor/
+resource/_DataURI/
+
+# Exclude large static vendor folders (Wix / parastorage / google maps / sentry caches)
+siteassets.parastorage.com/
+static.parastorage.com/
+static.wixstatic.com/
+vendor/static.wixstatic.com/
+vendor/siteassets.parastorage.com/
+browser.sentry-cdn.com/
+maps.googleapis.com/
+www.googletagmanager.com/
+www.sanjulogisticspacker.com/
+siteassets.parastorage.com/
+static.parastorage.com/
+tag-bundler/
+unpkg/
+*.zip
+*.tar
