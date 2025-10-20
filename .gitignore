@@ -1,0 +1,34 @@
+# Node
+node_modules/
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+
+# Env
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data and uploads (do not commit production uploads)
+/uploads
+/data
+/resource/_DataURI
+/vendor/static.wixstatic.com/media/
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Temporary
+tmp/
+*.tmp
+
+# Optional: local sqlite DB
+/*.db
